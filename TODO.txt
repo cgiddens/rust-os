@@ -1,0 +1,3 @@
+ [ ] pick up here (https://os.phil-opp.com/testing/#printing-to-the-console) to get test data out of QEMU using a serial port
+ [ ] run QEMU in background while running tests (https://os.phil-opp.com/testing/#hiding-qemu)
+ [ ] finish Testing section (https://os.phil-opp.com/testing/)

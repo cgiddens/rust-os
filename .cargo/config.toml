@@ -1,0 +1,18 @@
+# because we are targeting "x86_64-unknown-none", Rust has no pre-compiled "core" library. So, we need to compile it ourselves.
+# this is an unstable nightly feature.
+
+[unstable]
+build-std-features = ["compiler-builtins-mem"] # usually we get memcpy, memset, & memcmp from C std lib.
+                                               # Since we don't have that, we need to enable Rust's versions.
+                                               # These versions already exist, but they are mangled so as to not
+                                               # collide with the C std implementations. Enabling this feature simply
+                                               # applies #[no_mangle] to memcpy/memset/memcmp to expose the symbols.
+build-std = ["core", "compiler_builtins"]
+
+[build]
+target = "x86_64-os.json" # now we can call "cargo build", not "cargo build --target x86_64-os.json"
+
+[target.'cfg(target_os = "none")'] # I don't understand this mechanism or syntax, but it means "all targets that
+                                   # have set the 'os' field of their target configuration file to 'none'"
+runner = "bootimage runner" # specifies command that should be invoked for "cargo run". In this case, the "bootimage"
+                            # crate calls QEMU to load the bootloader, as well as our kernel
