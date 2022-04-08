@@ -51,7 +51,7 @@ pub extern "C" fn _start() -> ! {
 // exit_qemu "hack":
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 // it's a 32-bit exit code
-#[repr(u32)]
+#[repr(u16)]
 pub enum QemuExitCode {
     Success = 0x10, // sends 33 (success)
     Failed = 0x11, // sends failure (anything other than success)
@@ -81,7 +81,7 @@ fn run_tests(tests: &[&dyn Fn()]) {
     for test in tests {
         test();
     }
-    exit_qemu(QEMUExitCode::Success);
+    exit_qemu(QemuExitCode::Success);
 }
 
 #[test_case]
