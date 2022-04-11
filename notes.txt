@@ -1,0 +1,29 @@
+https://docs.rust-embedded.org/embedonomicon/preface.html
+	- rustup target add thumbv7m-none-eabi -> rustup target add aarch64-unknown-none
+
+(write the main.rs)
+
+$ cargo new --edition 2018 arm-s							# emitting --edition (defaults to latest stable) fails to compile
+$ cd arm-os
+$ vim src/main.rs (use initial main here https://docs.rust-embedded.org/embedonomicon/smallest-no-std.html)
+
+$ cargo rustc --target aarch64-unknown-none
+	-> this generates ELF header only. No idea why. Ending with " --" has no effect.
+
+$ cargo rustc --target aarch64-unknown-none -- --emit=obj
+	-> emits unlinked objects
+	-> doesn't link! So "cargo build" could finish,
+$ nm -alC target/aarch64-unknown-none/debug/deps/*.o
+	-> this is where the .o object files are stored pre-linking (neat!)
+      -> the extension-less executable is the unlinked ELF`
+      -> .d file has a list of source files that went into each .o and ELF. 
+         Used by (gcc??? rustc in this case)
+      -> the "-C" will demangle names (which isn't useful here but should prob be used
+         every time unless explicitly not needed
+	-> the "a" means to show all symbols, even normally suppressed ones -- mostly useful
+         for super-early dev? idk, right now it just shows debug symbols. Maybe those would
+         be gone during release?
+	-> the "l" provides some contextual information about each symbol and where it comes
+	   from outside the context of the .o file, but I don't really understand it
+
+
