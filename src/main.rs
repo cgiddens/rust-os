@@ -8,6 +8,7 @@
 // we can't implement our own "start" language item, because we'd still need "crt0". So instead, we will overwrite
 // "crt0" directly by implementing our own start_()
 #![no_main]
+
 // we need to use a custom test framework, since #[test] uses the standard library (and stack unwinding).
 // to do this, we use the "custom_test_frameworks" feature, which uses a "test_runner" to run a test runner function
 // that calls all functions annotated with #[test_case]. In our case, the function is called "run_tests" and lives in
@@ -19,25 +20,27 @@
 // attribute that re-exports the test harness entry point.
 #![reexport_test_harness_main = "test_main"]
 
-// need to implement our own panic handler, since we don't have the one included in the standard library
-use core::panic::PanicInfo;
+// BOOTLOADER: we need to have global (inserted assembly) to write out bootloader. 'global_asm' allows that
+use core::arch::global_asm;
 
-// vga_buffer.rs
-mod vga_buffer;
+// BOOTLOADER: "global_asm!" macro is for inline assembly; "start.s" is the ARM bootloader for Cortex-A53
+// The A53 is single-core, but we'll get to multi-core later. Right now, I have to learn how to write a
+// bootloader from scratch in order to be able to support ARM in QEMU, because the "bootloader" crate through
+// which I call "$ bootimage runner" has no ARM support; only x86_64. Plus, it's super opaque and I don't like
+// that. This code will run be compiled into the binary, but the linker will place it in the very beginning
+// of the program image and use the global "_start" entry point in start.s (which will in turn call our
+// _start() rust function
+global_asm!(include_str!("start.s"));
 
-#[panic_handler]
-fn panic(info: &PanicInfo) -> ! {
-    // function "diverges" (call stack is never allowed to return), so the return type is "!", or "never" (no type info)
-    // note: "!" can be coerced into any type
-    println!("{}", info);
-    loop {}
-}
+// vga_driver.rs, needed for our _start entry point to have access to the VGA interface
+mod vga_driver;
+
 
 // implement our own entry point
 // ensure entry point is actually called "_start" and isn't mangled
 #[no_mangle]
 // use C calling convention, not Rust calling convention. Return "never" type
-pub extern "C" fn _start() -> ! {
+pub extern "C" fn os_entry_point() -> ! {
     println!("Hello world!");
 
     // this implements conditional compilation; the following line only executes during "cargo test"
@@ -48,13 +51,25 @@ pub extern "C" fn _start() -> ! {
     loop {}
 }
 
+// need to implement our own panic handler, since we don't have the one included in the standard library
+use core::panic::PanicInfo;
+
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    // function "diverges" (call stack is never allowed to return), so the return type is "!", or "never" (no type info)
+    // note: "!" can be coerced into any type
+    println!("{}", info);
+    loop {}
+}
+
+
 // exit_qemu "hack":
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 // it's a 32-bit exit code
 #[repr(u16)]
 pub enum QemuExitCode {
     Success = 0x10, // sends 33 (success)
-    Failed = 0x11, // sends failure (anything other than success)
+    Failed = 0x11,  // sends failure (anything other than success)
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -63,6 +78,7 @@ pub enum QemuPort {
     ExitPort = 0xf4,
 }
 
+#[cfg(nope)]
 pub fn exit_qemu(exit_code: QemuExitCode) {
     use x86_64::instructions::port::Port;
 

@@ -1,0 +1,37 @@
+        ;; bootloading 
+
+.globl _start                       ; defines global (actual global, for the processor) entry point. ".globl"
+                                    ; makes this symbol visible to the linker
+
+.extern LD_STACK_PTR                ; external pointer to the stack register. We don't know what it is yet;
+                                    ; we will set it up later in the linker script
+
+.section ".text.boot"               ; declares the beginning of the ".text.boot" section of the ELF
+
+_start:                             ; the "start" assembly symbol declaration. Analogous to a function declaration + implementation
+    ; move the stack pointer (defined by the linker)
+    ; to the stack pointer register
+    ldr     x30, =LD_STACK_PTR      ; ldr = "load immediate"
+                                    ;       x30 -> link register (LR) (dest)
+                                    ;       =LD_STACK_PTR -> "=" means use special "pseudo" ldr instruction. Instead
+                                    ;                         of loading a register or much smaller value, this allows
+                                    ;                         us to load an arbitrary 32-bit constant value. This could
+                                    ;                         be accomplished with more instructions, but this is cleaner
+    mov     sp, x30                 ; mov = moves data.
+                                    ;       sp -> stack pointer register; shorthand for r13 (dest)
+                                    ;       x30 -> link register (LR) (src)
+
+    bl      my_main                 ; IN THEORY, this will call _start() in main.rs. However, we may have a "_start" symbol conflict here
+                                    ; bl = branch with link -> copies address of following instruction into LR, then branches to symbol
+                                    ;      _start -> the symbol to branch to
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+                    ;; QEMU shutdown 
+
+      ;; (supports shutdown signal from QEMU hypervisor)
+
+.equ PSCI_SYSTEM_OFF, 0x84000008
+.globl system_off
+system_off:
+    ldr     =x0, =PSCI_SYSTEM_OFF

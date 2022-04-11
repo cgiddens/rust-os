@@ -1,0 +1,31 @@
+ENTRY(_start)
+
+
+      /* defines sections of ELF */
+SECTIONS                                                                 
+{
+    .               =       0x40080000;                                      /* as far as I can tell, this is mapping the stack pointer 
+                                                                                wayyyy back in physical memory (~1GB back)? Makes some
+                                                                                bit of sense, as the stack does start at the top and the
+                                                                                heap starts at the bottom... */
+
+      /* declaring the ELF sections? */
+
+    .text.boot      :   {   *(.text.boot)   }
+    .text           :   {   *(.text)        }
+    .data           :   {   *(.data)        }
+    .rodata         :   {   *(.rodata)      }
+    .bss            :   {   *(.bss)         }
+
+    /* I believe '.' refers to an anonmyous (symbol? address?).
+       if so, the follwoing mackes sense: set the
+       object to use 8-bit alignment, add 0x4000
+       to its address (or symbol of an adress), then assigns
+       LD_STACK_PTR to the symbol/address. Boom, the processor
+       knows what the stack pointer is, where the ELF sections are,
+       has the entry point of the main executable (from the bootloader). */
+
+    .               =       ALIGN(8)
+    .               =       . + 0x4000
+    LD_STACK_PTR    =       .;
+}

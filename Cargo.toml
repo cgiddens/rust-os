@@ -7,7 +7,7 @@ edition = "2018"
 
 [dependencies]
 
-bootloader = "0.9.8" # we don't want to implement our own bootloader, since they're hardware-specific and boring.
+#bootloader = "0.9.8" # we don't want to implement our own bootloader, since they're hardware-specific and boring.
                      # The "bootloader" crate implements a basic BIOS bootloader *without* any C dependencies --
                      # just Rust and inline assembly!
 
@@ -18,7 +18,7 @@ volatile = "0.2.6"  # allows for Volatile wrapper type with 'read' and 'write' m
 spin = "0.5.2" # gives access to spin::Mutex, which is a spinlocking Mutex. Needed because we can't use the
                # std::Mutex
 
-x86_64 = "0.14.2"   # if we actually want to be able to shut down our OS from within QEMU, we'd need to implement an APM or ACPI
+#x86_64 = "0.14.2"   # if we actually want to be able to shut down our OS from within QEMU, we'd need to implement an APM or ACPI
                     # interface. That's really complex, but there's a shortcut -- QEMU supports a special "isa-debug-exit" device
                     # that allows the guest system to easily exit QEMU. We need to pass a -device argument to QEMU through
                     # bootimage, as shown below. 'iobase' and 'iosize' specify the "I/O Port" through which the device can be
