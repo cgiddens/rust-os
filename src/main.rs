@@ -35,6 +35,7 @@ global_asm!(include_str!("start.s"));
 // vga_driver.rs, needed for our _start entry point to have access to the VGA interface
 mod vga_driver;
 
+use core::ptr;
 
 // implement our own entry point
 // ensure entry point is actually called "_start" and isn't mangled
@@ -42,6 +43,15 @@ mod vga_driver;
 // use C calling convention, not Rust calling convention. Return "never" type
 pub extern "C" fn os_entry_point() -> ! {
     println!("Hello world!");
+
+    const UART0: *mut u8 = 0x0900_0000 as *mut u8;
+    let out_str = b"AArch64 Bare Metal";
+    for byte in out_str {
+        unsafe {
+            ptr::write_volatile(UART0, *byte);
+        }
+    }
+
 
     // this implements conditional compilation; the following line only executes during "cargo test"
     #[cfg(test)]

@@ -9,6 +9,7 @@ _start:
 
     bl      os_entry_point 
 
+.equ LD_STACK_PTR, 0x40004000
 .equ PSCI_SYSTEM_OFF, 0x84000008
 .globl system_off
 system_off:
